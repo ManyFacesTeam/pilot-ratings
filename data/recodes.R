@@ -83,7 +83,7 @@ list(
       "tã¼rkiye",
       "türkiye"
     ),
-    ethnicity_rec = "Middle Eastern or North African (MENA)"
+    ethnicity_rec = "MENA"
   ),
   data.frame(
     ethnicity = c(
@@ -147,7 +147,7 @@ list(
     gender_rec = "female"
   ),
   data.frame(
-    gender = c("homem", "masculino", "mascãºlino", "m"),
+    gender = c("male", "homem", "masculino", "mascãºlino", "m"),
     gender_rec = "male"
   ),
   data.frame(
@@ -234,3 +234,4 @@ data.frame(ethnicity = c("mauritian", "belgium, asian", "black/british",
 )  |> do.call(dplyr::bind_rows, args = _) -> quest_eth_recode
 
 readr::write_csv(quest_eth_recode, "data/quest_eth_recode.csv")
+
