@@ -1,10 +1,10 @@
 ---
-title: "ManyFaces pilot ratings"
+title: "ManyFaces validation/norming ratings"
 subtitle: "Data prep: data cleaning and exclusions"
 format: 
   html:
     code-fold: true
-    df-print: paged
+    df-print: kable
     embed-resources: true
     fig-height: 5
     fig-width: 8
@@ -138,15 +138,15 @@ quest_raw <- read_csv(quest_file, show_col_types = FALSE) |>
   unique()
 
 # write to the data directory
-write_csv(exp_raw, "data/manyfaces-pilot-exp.csv")
-write_csv(quest_raw, "data/manyfaces-pilot-quest.csv")
+write_csv(exp_raw, "data/manyfaces_ratings_exp.csv")
+write_csv(quest_raw, "data/manyfaces_ratings_quest.csv")
 ```
 
 
 ### Reshape Data
 
 ```{r}
-exp_raw <- read_csv("data/manyfaces-pilot-exp.csv",
+exp_raw <- read_csv("data/manyfaces_ratings_exp.csv",
                     show_col_types = FALSE)
 
 ed <- exp_data |>
@@ -161,7 +161,7 @@ exp_long_raw <- exp_raw |>
 ```
 
 ```{r}
-quest_raw <- read_csv("data/manyfaces-pilot-quest.csv",
+quest_raw <- read_csv("data/manyfaces_ratings_quest.csv",
                       show_col_types = FALSE) |> 
   dplyr::select(session_id, q_name, dv, endtime) |>
   unique() |>
@@ -171,14 +171,15 @@ quest_raw <- read_csv("data/manyfaces-pilot-quest.csv",
 
 
 ```{r}
-model_raw <- read_csv("data/manyfaces-pilot-models.csv",
+# model data are not shared on github but are available via UK Data Service ReShare
+model_raw <- read_csv("ReShare_data/manyfaces_model_data.csv",
                       show_col_types = FALSE)
 ```
 
 ### Preliminary data cleaning
 
 #### Model data
-
+**recoding of gender, ethnicity, height, and weight**
 ```{r}
 ethnicity_recode <- read_csv("data/eth_recode.csv", na = "", show_col_types = FALSE)
 gender_recode <- read_csv("data/gender_recode.csv", na = "", show_col_types = FALSE)
@@ -218,6 +219,7 @@ data_model <- model_raw |>
 ```
 
 #### Questionnaire data
+**recoding of  ethnicity**
 ```{r}
 quest_eth_recode <- read_csv("data/quest_eth_recode.csv", na = "", show_col_types = FALSE)
 
@@ -227,6 +229,15 @@ data_quest <- quest_raw |>
   left_join(quest_eth_recode, by = "ethnicity") |>
   relocate(ethnicity_rec, .after = ethnicity)
 ```
+
+**remove duplicates**
+```{r}
+data_quest <- data_quest |> 
+  group_by(session_id) |> 
+  filter(endtime == max(endtime)) |> 
+  dplyr::distinct()
+```
+
 
 #### Experimental data
 
@@ -420,16 +431,17 @@ data_exp |>
 
 ```{r}
 # Rating data
-write_csv(data_exp, "data/manyfaces-pilot-exp_cleaned.csv")
+write_csv(data_exp, "data/manyfaces_ratings_exp_cleaned.csv")
 
 # Questionnaire data
 data_quest |> 
   filter(session_id %in% data_exp$session_id) |>
-  write_csv("data/manyfaces-pilot-quest_cleaned.csv")
+  select(-try) |>
+  write_csv("data/manyfaces_ratings_quest_cleaned.csv")
 
 # Exclusions data
 write_csv(exclusions, "data/exclusions.csv")
 
 # Model data
-write_csv(data_model, "data/manyfaces-pilot-models_cleaned.csv")
+write_csv(data_model, "ReShare_data/manyfaces_model_data_cleaned.csv")
 ```
