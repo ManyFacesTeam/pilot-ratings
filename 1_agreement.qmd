@@ -67,8 +67,15 @@ data_qu |>
 ```{r}
 data_qu |> 
   ggplot(aes(x = age)) +
-  geom_histogram(binwidth = 1, fill="orchid") +
-  theme_minimal()
+  geom_histogram(binwidth = 1, fill="orchid", alpha = .8) +
+  scale_x_continuous(breaks = seq(15, 85, 5)) +
+  labs(title = "Rater self-reported age",
+       x = "age (years)", 
+       y = "count") +
+    theme_minimal() +
+    theme(axis.text = element_text(size = 10),
+        axis.title = element_text(size = 12, face = "plain"),
+        title = element_text(size = 12))
 ```
 
 ### Gender
@@ -77,16 +84,57 @@ data_qu |>
 count(data_qu, gender, sort=TRUE)
 ```
 
-### Residence
-
-```{r}
-count(data_qu, residence, sort = TRUE)
-```
-
 ### Ethnicity
 
 ```{r}
 count(data_qu, ethnicity_rec, sort = TRUE)
+```
+
+### Residence
+
+```{r}
+# convert country codes to names
+data_qu_rename <- data_qu |>
+  mutate(residence = case_when(residence=="ZA" ~ "South Africa",
+                               residence== "GB" ~ "United Kingdom",
+                               residence== "US" ~ "United States",
+                               residence== "PL" ~ "Poland",
+                               residence== "PT" ~ "Portugal",
+                               residence== "CA" ~ "Canada",
+                               residence== "ES" ~ "Spain",
+                               residence== "IT" ~ "Italy",
+                               residence== "KE" ~ "Kenya",
+                               residence== "DE" ~ "Germany",
+                               residence== "GR" ~ "Greece",
+                               residence== "HU" ~ "Hungary",
+                               residence== "IN" ~ "India",
+                               residence== "MX" ~ "Mexico",
+                               residence== "CL" ~ "Chile",
+                               residence== "FR" ~ "France",
+                               residence== "IE" ~ "Ireland",
+                               residence== "BR" ~ "Brazil",
+                               residence== "NL" ~ "Netherlands",
+                               residence== "SE" ~ "Sweden",
+                               residence== "AU" ~ "Australia",
+                               residence== "HR" ~ "Croatia",
+                               residence== "CZ" ~ "Czechia",
+                               residence== "EE" ~ "Estonia",
+                               residence== "LV" ~ "Latvia",
+                               residence== "BE" ~ "Belgium",
+                               residence== "DK" ~ "Denmark",
+                               residence== "IL" ~ "Israel",
+                               residence== "CH" ~ "Switzerland",
+                               residence== "SI" ~ "Slovenia",
+                               residence== "DZ" ~ "Algeria",
+                               residence== "AR" ~ "Argentina",
+                               residence== "AT" ~ "Austria",
+                               residence== "CN" ~ "China",
+                               residence== "FI" ~ "Finland",
+                               residence== "KZ" ~ "Kazakhstan",
+                               residence== "MA" ~ "Morocco",
+                               residence== "SK" ~ "Slovakia"))
+
+count(data_qu_rename, residence, sort=TRUE) 
 ```
 
 ### Devices
@@ -96,6 +144,7 @@ count(data_qu, device, sort = TRUE)
 ```
 
 ## Interrater agreement
+ICCs, corridor of stability, alpha, & omega
 
 ### Standardised trait ratings
 
@@ -208,8 +257,10 @@ icc2k_corridor_summary |>
 ```
 
 #### Alpha & omega
-
-*Note on warnings:*
+Cronbach’s alpha (α) and McDonald’s omega total (ωt)  
+  
+  
+*Note on warnings:*  
  * "Some items were negatively correlated...": potentially reflects true inter-rater disagreement; reversing raters not appropriate in this context
  * "Omega_h... not meaningful": omega_h is undefined when computing a one-factor solution; omega_t remains valid and is the relevant statistic reported.
 
@@ -285,17 +336,17 @@ icc2k_corridor_summary <- icc_corridor |>
 thresholds_median_075 <- icc2k_corridor_summary |>
   group_by(experiment) |>
   summarise(
-    N_for_075_median = ifelse(length(n_raters_sampled[ICC2_k_median >= 0.75]) > 0,
-                              min(n_raters_sampled[ICC2_k_median >= 0.75]),
-                              NA),
+    N_for_075_median = ifelse(
+      length(n_raters_sampled[ICC2_k_median >= 0.75]) > 0,
+      min(n_raters_sampled[ICC2_k_median >= 0.75]), NA),
     .groups = "drop")
 
 thresholds_median_090 <- icc2k_corridor_summary |>
   group_by(experiment) |>
   summarise(
-    N_for_090_median = ifelse(length(n_raters_sampled[ICC2_k_median >= 0.90]) > 0,
-                              min(n_raters_sampled[ICC2_k_median >= 0.90]),
-                              NA),
+    N_for_090_median = ifelse(
+      length(n_raters_sampled[ICC2_k_median >= 0.90]) > 0,
+      min(n_raters_sampled[ICC2_k_median >= 0.90]), NA),
     .groups = "drop")
 
 n_075 <- thresholds_median_075 |> deframe()
