@@ -30,13 +30,14 @@ data_exp <- read_csv("data/manyfaces_ratings_exp_cleaned.csv",
 exp_levels_neutral <- c("attractive", "trustworthy", "dominant", 
                         "memorable", "gender-typical")
 
-exp_levels_neutral_unstd <- c("attractive (unstd)", "trustworthy (unstd)",
+exp_levels_neutral_unstd <- c("attractive (unstd)", 
+                              "trustworthy (unstd)",
                               "dominant (unstd)")
 
 exp_levels_emo_cat <- c("emotion 1", "emotion 2", "emotion 3", 
                         "emotion 4", "emotion 5", "emotion 6")
 
-exp_levels_emo_int <- c("fear", "anger", "disgust", 
+exp_levels_emo_int <- c("anger", "disgust", "fear", 
                         "happiness", "sadness", "surprise")
 
 # Questionnaire data
@@ -316,6 +317,9 @@ emo_cat <- data_exp |>
                                                 happiness = "hap",
                                                 sadness = "sad",
                                                 surprise = "sur"))
+
+emo_cat_by_gender <- emo_cat |> 
+  left_join((data_model |> dplyr::select(lab_id, model_id, gender_rec)), by = c("lab_id", "model_id"))
 ```
 
 ### Descriptive statistics
@@ -331,6 +335,22 @@ emo_cat |>
   relocate(other, .after = surprise) |> 
   mutate(across(where(is.numeric), ~ round(.x, 2)))
 ```
+
+split by model gender (female vs male)
+```{r}
+emo_cat_by_gender |> 
+  filter(gender_rec == "female" | gender_rec =="male") |>
+  group_by(gender_rec, model_expression) |> 
+  count(model_expression, dv) |> 
+  mutate(prop = n / sum(n)) |>
+  ungroup() |> 
+  dplyr::select(-n) |> 
+  pivot_wider(names_from = dv,
+              values_from = prop) |> 
+  relocate(other, .after = surprise) |> 
+  mutate(across(where(is.numeric), ~ round(.x, 2)))
+```
+
 
 ### Histograms
 ```{r fig.height=5, fig.width=8}
@@ -413,6 +433,9 @@ emo_int <- data_exp |>
                        delim = "_",
                        names = c("lab_id", "model_id"),
                        too_many = "drop")
+
+emo_int_by_gender <- emo_int |> 
+  left_join((data_model |> dplyr::select(lab_id, model_id, gender_rec)), by = c("lab_id", "model_id"))
 ```
 
 ### Descriptive statistics
@@ -427,6 +450,19 @@ emo_int |>
             .by = "exp") |> 
 mutate(across(where(is.numeric) & !any_of("N"), ~ round(.x, 2)))
 ```
+
+split by model gender (female vs male)
+```{r}
+emo_int_by_gender |>
+  filter(gender_rec == "female" | gender_rec == "male") |>
+  summarise(mean_rating = mean(dv),
+            .by = c("gender_rec", "exp", "lab_id", "model_id")) |> 
+  summarise(M = mean(mean_rating),
+            SD = sd(mean_rating),
+            .by = c("gender_rec", "exp")) |> 
+mutate(across(where(is.numeric) & !any_of("N"), ~ round(.x, 2)))
+```
+
 
 ### Histograms
 ```{r fig.height=5, fig.width=8}
@@ -467,7 +503,7 @@ emo_int_means <- emo_int |>
   dplyr::select(-rater_N)
 ```
 
-## Age Ratings
+## Age ratings
 
 ```{r}
 dv_levels <- seq(20, 85, 5)
@@ -507,6 +543,8 @@ age_modes <- age |>
             .groups = "drop") |>
   unnest_wider(out)
 ```
+
+### Ratings per model
 
 ```{r}
 #| fig-height: 10
@@ -585,4 +623,115 @@ write_csv(ratings_traits, "results/manyfaces_ratings_traits.csv")
 write_csv(ratings_emotions, "results/manyfaces_ratings_emotions.csv")
 ```
 
+## Model self-report
+  
+### gender
+```{r}
+count(data_model, gender_rec, sort=TRUE)
+```
+  
+  
+### ethnicity
+```{r}
+count(data_model, ethnicity_rec, sort=TRUE)
+```
+  
+  
+### age
+  
+```{r fig.height = 3.5, fig.width=8, warning=FALSE}
+age_by_face |> 
+  ggplot(aes(x = age_actual)) +
+  geom_histogram(binwidth = 1, fill = "orchid", alpha = .8) +
+  scale_x_continuous(breaks = seq(15, 85, 5)) +
+  labs(title = "Model self-reported age",
+       x = "age (years)", 
+       y = "count") +
+    theme_minimal() +
+    theme(axis.text = element_text(size = 10),
+        axis.title = element_text(size = 12, face = "plain"),
+        title = element_text(size = 12)) 
+```
 
+  
+```{r}
+data_model |>
+  summarise(age_min = min(age, na.rm = TRUE),
+    age_max = max(age, na.rm = TRUE),
+    age_M = mean(age, na.rm = TRUE),
+    age_SD = sd(age, na.rm=TRUE))
+```
+  
+  
+descriptive statistics split by gender
+```{r}
+data_model |>
+  mutate(gender = gender_rec) |>
+  summarise(
+    .by = gender,
+    n = n(),
+    age_min = min(age, na.rm = TRUE),
+    age_max = max(age, na.rm = TRUE),
+    age_M = mean(age, na.rm = TRUE),
+    age_SD = sd(age, na.rm = TRUE))
+```
+  
+  
+### height (cm)
+  
+```{r fig.height = 3.5, fig.width=8, warning=FALSE}
+data_model |>
+  ggplot(aes(x = height_cm)) +
+  geom_histogram(binwidth = 1, fill = "#F7AE8F", alpha = .8) +
+  labs(title = "Model self-reported height",
+       x = "height (cm)", 
+       y = "count") +
+    theme_minimal() +
+    theme(axis.text = element_text(size = 10),
+        axis.title = element_text(size = 12, face = "plain"),
+        title = element_text(size = 12)) 
+```
+  
+  
+descriptive statistics split by gender
+```{r}
+data_model |>
+  mutate(gender = gender_rec) |>
+  summarise(
+    .by = gender,
+    n = n(),
+    height_min = min(height_cm, na.rm = TRUE),
+    height_max = max(height_cm, na.rm = TRUE),
+    height_M = mean(height_cm, na.rm = TRUE),
+    height_SD = sd(height_cm, na.rm = TRUE)) 
+```
+  
+  
+### weight (kg)
+  
+```{r fig.height = 3.5, fig.width=8, warning=FALSE}
+data_model |>
+  ggplot(aes(x = weight_kg)) +
+  geom_histogram(binwidth = 1, fill = "orange", alpha = .8) +
+  labs(title = "Model self-reported weight",
+       x = "weight (kg)", 
+       y = "count") +
+    theme_minimal() +
+    theme(axis.text = element_text(size = 10),
+        axis.title = element_text(size = 12, face = "plain"),
+        title = element_text(size = 12))
+```
+  
+  
+descriptive statistics split by gender
+```{r}
+data_model |>
+  mutate(gender = gender_rec) |>
+  summarise(
+    .by = gender,
+    n = n(),
+    weight_min = min(weight_kg, na.rm = TRUE),
+    weight_max = max(weight_kg, na.rm = TRUE),
+    weight_M = mean(weight_kg, na.rm = TRUE),
+    weight_SD = sd(weight_kg, na.rm = TRUE)) 
+```
