@@ -147,7 +147,7 @@ list(
     gender_rec = "female"
   ),
   data.frame(
-    gender = c("male", "homem", "masculino", "mascãºlino", "m"),
+    gender = c("male", "homem", "masculino", "mascãºlino", "m", "male "),
     gender_rec = "male"
   ),
   data.frame(
@@ -155,16 +155,15 @@ list(
       "sexo feminino, gãªnero fluido",
       "nã£o binã¡rio",
       "genderfluid (amab)",
-      "nonbinary"
-    ),
-    gender_rec = "non-binary"
-  ),
+      "nonbinary","non-binary"),
+    gender_rec = "non-binary"),
   # don't double-categorise
   # data.frame(
   #   gender = c("sexo feminino, gãªnero fluido", "genderfluid (amab)"),
   #   gender_rec = "gender-fluid"
   # ),
-  data.frame(gender = c("hetero cis", "NA"), gender_rec = NA_character_)
+  data.frame(gender = c("hetero cis", "NA", ""), 
+             gender_rec = NA_character_)
 )  |> do.call(dplyr::bind_rows, args = _) -> gender_recode
 
 # check all are covered
