@@ -77,16 +77,21 @@ std_neutral |>
 mutate(across(where(is.numeric) & !any_of("N"), ~ round(.x, 2)))
 ```
 
-```{r}
+```{r fig.height=5, fig.width=8}
 std_neutral |>
   ggplot(aes(x = dv, y = after_stat(count / sum(count)), fill = exp)) +
   geom_histogram(binwidth = 1, show.legend = FALSE, color = "black") +
   facet_wrap(~exp, ncol = 3, axes = "all_x", drop = FALSE) +
-  labs(title = "Standardised neutral ratings",
-       x = "",
+  labs(title = "Standardized neutral trait ratings",
+       x = "Rating",
        y="Proportion") +
   scale_x_continuous(breaks = 1:7) +
-  scale_fill_manual(values = rainbow, drop = FALSE)
+  scale_fill_manual(values = rainbow, drop = FALSE) +
+  theme_minimal() +
+  theme(strip.text = element_text(size = 12, face = "bold"),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 12, face = "plain"),
+        title = element_text(size = 13, face = "bold"))
 ```
 
 
@@ -192,19 +197,21 @@ unstd_neutral |>
 mutate(across(where(is.numeric) & !any_of("N"), ~ round(.x, 2)))
 ```
 
-```{r}
-#| fig-height: 2.5
-#| fig-width: 8
-
+```{r fig.height = 2.75, fig.width=8}
 unstd_neutral |>
   ggplot(aes(x = dv, y = after_stat(count / sum(count)), fill = exp)) +
   geom_histogram(binwidth = 1, show.legend = FALSE, color = "black") +
   facet_wrap(~exp, ncol = 5, drop = FALSE) +
-  labs(title = "Unstandardised Neutral Ratings",
-       x = "",
+  labs(title = "Unstandardized neutral trait ratings",
+       x = "Rating",
        y = "Proportion") +
   scale_x_continuous(breaks = 1:7) +
-  scale_fill_manual(values = rainbow, drop = FALSE)
+  scale_fill_manual(values = rainbow, drop = FALSE) + 
+  theme_minimal() +
+  theme(strip.text = element_text(size = 12, face = "bold"),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 12, face = "plain"),
+        title = element_text(size = 13, face = "bold"))
 ```
 
 Save mean rating for each face for each trait
@@ -281,7 +288,7 @@ emo_cat |>
   mutate(across(where(is.numeric), ~ round(.x, 2)))
 ```
 
-```{r}
+```{r fig.height=5, fig.width=8}
 emo_levels <- levels(emo_cat$model_expression)
 emo_labels <- paste(emo_levels, "faces")
 
@@ -291,8 +298,6 @@ emo_prop <- emo_cat |>
   mutate(prop = n / sum(n)) |>
   ungroup() 
 
-# *** missing bottom arrows for most-chosen category here, unclear why
-# *** to add: text showing proportion values superimposed on figure (at least for most-chosen)
 emo_prop |>
   mutate(emo = factor(model_expression, emo_levels, emo_labels)) |>
   ggplot(aes(x = dv, y=prop, fill = dv)) +
@@ -305,31 +310,37 @@ emo_prop |>
   facet_wrap(~emo, axes = "all_x", drop = FALSE) +
   scale_x_discrete(labels = c("", "", "", "", "", "", "")) +
   scale_fill_manual(values = c(rainbow, "grey"), drop = FALSE) +
-  labs(title = "Emotion categorisation",
-       x = "",
+  labs(title = "Standardized emotion categorizations",
+       x = "Categorization",
        y = "Proportion",
-       fill = "Categorised as") +
+       fill = "Categorized as") +
   coord_cartesian(clip = "off") +
-  theme(axis.ticks.x = element_blank())
+  theme_minimal() +
+  theme(axis.ticks.x = element_blank(),
+        strip.text = element_text(size = 12, face = "bold"),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 12, face = "plain"),
+        title = element_text(size = 13, face = "bold"))
 
+# this shows counts rather than proportions, but includes downward arrows for most-chosen category
 
-emo_cat |>
-  mutate(emo = factor(model_expression, emo_levels, emo_labels)) |>
-  ggplot(aes(x = dv, fill = dv)) +
-  geom_point(aes(x = x, colour = I(fill), fill = I(fill)), 
-             data.frame(emo = factor(emo_levels, emo_levels, emo_labels),
-                        x = 1:6,
-                        fill = rainbow),
-             size = 6.5, y = -60, shape = 18, show.legend = FALSE) +
-  geom_bar(color = "transparent") +
-  facet_wrap(~emo, axes = "all_x", drop = FALSE) +
-  scale_x_discrete(labels = c("", "", "", "", "", "", "")) +
-  scale_fill_manual(values = c(rainbow, "grey"), drop = FALSE) +
-  labs(title = "Emotion categorisation",
-       x = "",
-       fill = "Categorised as") +
-  coord_cartesian(clip = "off") +
-  theme(axis.ticks.x = element_blank())
+#emo_cat |>
+#  mutate(emo = factor(model_expression, emo_levels, emo_labels)) |>
+#  ggplot(aes(x = dv, fill = dv)) +
+#  geom_point(aes(x = x, colour = I(fill), fill = I(fill)), 
+#             data.frame(emo = factor(emo_levels, emo_levels, emo_labels),
+#                        x = 1:6,
+#                        fill = rainbow),
+#             size = 6.5, y = -60, shape = 18, show.legend = FALSE) +
+#  geom_bar(color = "transparent") +
+#  facet_wrap(~emo, axes = "all_x", drop = FALSE) +
+#  scale_x_discrete(labels = c("", "", "", "", "", "", "")) +
+#  scale_fill_manual(values = c(rainbow, "grey"), drop = FALSE) +
+#  labs(title = "Standardized emotion categorizations",
+#       x = "",
+#       fill = "Categorized as") +
+# coord_cartesian(clip = "off") +
+#  theme(axis.ticks.x = element_blank())
 ```
 
 Save proportion of raters choosing each emotion for each face
@@ -371,16 +382,21 @@ emo_int |>
 mutate(across(where(is.numeric) & !any_of("N"), ~ round(.x, 2)))
 ```
 
-```{r}
+```{r fig.height=5, fig.width=8}
 emo_int |>
   ggplot(aes(x = dv, y = after_stat(count / sum(count)), fill = exp)) +
   geom_histogram(binwidth = 1, show.legend = FALSE, color = "black") +
   facet_wrap(~exp, ncol = 3, axes = "all_x", drop = FALSE) +
-  labs(title = "Emotion Intensity Ratings",
-       x = "",
+  labs(title = "Standardized emotion intensity ratings",
+       x = "Rating",
        y = "Proportion") +
   scale_fill_manual(values = rainbow, drop = FALSE) +
-  scale_x_continuous(breaks = 1:7)
+  scale_x_continuous(breaks = 1:7) + 
+  theme_minimal() +
+  theme(strip.text = element_text(size = 12, face = "bold"),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 12, face = "plain"),
+        title = element_text(size = 13, face = "bold"))
 ```
 
 Save mean rating for each face for each trait
